@@ -6,8 +6,17 @@ import { SignupDto } from './dto/signup.dto';
 import { CurrentUser, type AuthUser } from './current-user.decorator';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
 const cookieName = () => process.env.AUTH_COOKIE_NAME ?? 'diet_session';
-const cookieOptions = () => ({ httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/', maxAge: 7 * 24 * 60 * 60 * 1000 });
+const cookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: process.env.COOKIE_MAX_AGE_MS ? Number(process.env.COOKIE_MAX_AGE_MS) : SEVEN_DAYS_MS,
+  ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
+});
 
 @Controller('auth')
 export class AuthController {

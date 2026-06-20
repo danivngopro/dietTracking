@@ -15,12 +15,35 @@ export class FoodLogsService {
   async update(userId: string, id: string, dto: UpdateFoodLogDto) { const existing = await this.prisma.foodLog.findFirst({ where: { id, userId } }); if (!existing) throw new NotFoundException({ code: 'LOG_NOT_FOUND', message: 'Log not found' }); const snapshot = await this.snapshots.build(userId, dto); return this.map(await this.prisma.foodLog.update({ where: { id }, data: { foodId: dto.foodId ?? null, mealId: dto.mealId ?? null, quantity: dto.quantity, eatenAt: new Date(dto.eatenAt), notes: dto.notes, ...this.snapshotData(snapshot) } })); }
   async remove(userId: string, id: string) { const result = await this.prisma.foodLog.deleteMany({ where: { id, userId } }); if (!result.count) throw new NotFoundException({ code: 'LOG_NOT_FOUND', message: 'Log not found' }); return { deleted: true }; }
   async markEaten(userId: string, itemId: string, dto: MarkEatenDto) {
+    // Build the snapshot outside the transaction (reads food/meal data; no write contention).
     const item = await this.prisma.mealPlanItem.findFirst({ where: { id: itemId, mealPlan: { userId } }, include: { mealPlan: true } });
     if (!item) throw new NotFoundException({ code: 'PLAN_ITEM_NOT_FOUND', message: 'Plan item not found' });
     const quantity = dto.quantity ?? serializeDecimal(item.quantity);
     const eatenAt = dto.eatenAt ?? new Date().toISOString();
     const snapshot = await this.snapshots.build(userId, { foodId: item.foodId ?? undefined, mealId: item.mealId ?? undefined, quantity });
-    try { return this.map(await this.prisma.foodLog.create({ data: { userId, foodId: item.foodId, mealId: item.mealId, mealPlanItemId: item.id, quantity, eatenAt: new Date(eatenAt), notes: dto.notes ?? item.notes, ...this.snapshotData(snapshot) } })); } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictException({ code: 'PLAN_ITEM_ALREADY_LOGGED', message: 'This planned item has already been logged' }); throw error; }
+    try {
+      return this.map(
+        await this.prisma.$transaction((tx) =>
+          tx.foodLog.create({
+            data: {
+              userId,
+              foodId: item.foodId,
+              mealId: item.mealId,
+              mealPlanItemId: item.id,
+              quantity,
+              eatenAt: new Date(eatenAt),
+              notes: dto.notes ?? item.notes,
+              ...this.snapshotData(snapshot),
+            },
+          }),
+        ),
+      );
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException({ code: 'PLAN_ITEM_ALREADY_LOGGED', message: 'This planned item has already been logged' });
+      }
+      throw error;
+    }
   }
 }
 

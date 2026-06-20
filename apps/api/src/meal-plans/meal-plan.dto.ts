@@ -1,10 +1,11 @@
 import { MealLabel } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsDateString, IsEnum, IsOptional, IsString, Matches, MaxLength, ValidateNested } from 'class-validator';
+import { POSITIVE_DECIMAL_PATTERN } from '@diet/shared';
 export class PlanItemDto {
   @IsOptional() @IsString() foodId?: string;
   @IsOptional() @IsString() mealId?: string;
-  @Matches(/^(0|[1-9]\d*)(\.\d{1,3})?$/) quantity!: string;
+  @Matches(POSITIVE_DECIMAL_PATTERN) quantity!: string;
   @IsOptional() @Matches(/^([01]\d|2[0-3]):[0-5]\d$/) plannedTime?: string;
   @IsOptional() @IsEnum(MealLabel) mealLabel?: MealLabel;
   @IsOptional() @IsString() @MaxLength(500) notes?: string;

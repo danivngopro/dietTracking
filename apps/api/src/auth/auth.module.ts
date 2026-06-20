@@ -4,9 +4,10 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { JWT_SECRET } from '../config/jwt.config';
 
 @Module({
-  imports: [PassportModule, JwtModule.register({ secret: process.env.JWT_SECRET ?? 'development-only-secret-change-me', signOptions: { expiresIn: '7d' } })],
+  imports: [PassportModule, JwtModule.register({ secret: JWT_SECRET, signOptions: { expiresIn: '7d' } })],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
   exports: [JwtModule],

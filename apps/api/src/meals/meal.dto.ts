@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsOptional, IsString, Matches, MaxLength, ValidateNested } from 'class-validator';
-class MealItemDto { @IsString() foodId!: string; @Matches(/^(0|[1-9]\d*)(\.\d{1,3})?$/) quantity!: string }
+import { POSITIVE_DECIMAL_PATTERN } from '@diet/shared';
+class MealItemDto { @IsString() foodId!: string; @Matches(POSITIVE_DECIMAL_PATTERN) quantity!: string }
 export class CreateMealDto {
   @IsString() @MaxLength(120) name!: string;
   @IsOptional() @IsString() @MaxLength(500) description?: string;

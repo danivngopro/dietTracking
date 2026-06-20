@@ -1,15 +1,15 @@
 import { FoodSource, ServingUnit } from '@prisma/client';
 import { IsEnum, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
-const decimal = /^(0|[1-9]\d*)(\.\d{1,3})?$/;
+import { DECIMAL_PATTERN, POSITIVE_DECIMAL_PATTERN } from '@diet/shared';
 export class CreateFoodDto {
   @IsString() @MaxLength(120) name!: string;
   @IsOptional() @IsString() @MaxLength(120) brand?: string;
-  @Matches(decimal) servingSize!: string;
+  @Matches(POSITIVE_DECIMAL_PATTERN) servingSize!: string;
   @IsEnum(ServingUnit) servingUnit!: ServingUnit;
-  @Matches(decimal) calories!: string;
-  @Matches(decimal) protein!: string;
-  @Matches(decimal) carbs!: string;
-  @Matches(decimal) fat!: string;
+  @Matches(DECIMAL_PATTERN) calories!: string;
+  @Matches(DECIMAL_PATTERN) protein!: string;
+  @Matches(DECIMAL_PATTERN) carbs!: string;
+  @Matches(DECIMAL_PATTERN) fat!: string;
   @IsOptional() @IsString() @MaxLength(500) notes?: string;
 }
 export class UpdateFoodDto extends CreateFoodDto {}

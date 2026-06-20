@@ -1,9 +1,11 @@
+import './config/jwt.config'; // validates JWT_SECRET at startup before the app is created
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter';
 import { ResponseInterceptor } from './common/http/response.interceptor';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
