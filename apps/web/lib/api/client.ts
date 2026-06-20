@@ -1,5 +1,7 @@
 import type { ApiFailure, ApiSuccess } from '@diet/shared';
 
+const API_TIMEOUT_MS = 10_000;
+
 export class ApiError extends Error {
   constructor(public code: string, message: string, public details?: unknown, public status?: number) {
     super(message);
@@ -10,18 +12,46 @@ export class ApiError extends Error {
 // Default to a same-origin path so the Next.js rewrite proxy handles it (first-party cookies, no CORS).
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
+function createTimeoutSignal(existingSignal?: AbortSignal | null) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  const abortFromExistingSignal = () => controller.abort();
+  if (existingSignal) {
+    if (existingSignal.aborted) controller.abort();
+    else existingSignal.addEventListener('abort', abortFromExistingSignal, { once: true });
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      window.clearTimeout(timeout);
+      existingSignal?.removeEventListener('abort', abortFromExistingSignal);
+    },
+  };
+}
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body !== undefined && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
 
+  const timeoutSignal = createTimeoutSignal(init.signal);
+
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}${path}`, { ...init, credentials: 'include', headers });
+    response = await fetch(`${baseUrl}${path}`, {
+      ...init,
+      credentials: 'include',
+      headers,
+      signal: timeoutSignal.signal,
+    });
   } catch (error) {
     throw new ApiError(
       'NETWORK_ERROR',
       error instanceof Error ? `Could not reach the API: ${error.message}` : 'Could not reach the API',
     );
+  } finally {
+    timeoutSignal.cleanup();
   }
 
   const text = await response.text();
