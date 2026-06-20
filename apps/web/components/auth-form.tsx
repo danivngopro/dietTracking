@@ -6,10 +6,16 @@ import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError, apiFetch, jsonRequest } from '@/lib/api/client';
 
+const AUTH_TIMEOUT_MS = 8_000;
+
 function formatAuthError(error: unknown) {
   if (error instanceof ApiError) {
     const suffix = error.status ? ` (${error.code}, HTTP ${error.status})` : ` (${error.code})`;
     return `${error.message}${suffix}`;
+  }
+
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return 'The API did not respond within 8 seconds. Make sure the API server is running on port 3001.';
   }
 
   if (error instanceof Error) return error.message;
@@ -29,14 +35,22 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     setBusy(true);
     setError('');
 
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+
     try {
-      await apiFetch(`/auth/${mode}`, jsonRequest('POST', { email, password }));
+      await apiFetch(`/auth/${mode}`, {
+        ...jsonRequest('POST', { email, password }),
+        signal: controller.signal,
+      });
       void queryClient.invalidateQueries({ queryKey: ['session'] });
       router.replace('/dashboard');
       router.refresh();
     } catch (e) {
       setError(formatAuthError(e));
       setBusy(false);
+    } finally {
+      window.clearTimeout(timeout);
     }
   };
 
