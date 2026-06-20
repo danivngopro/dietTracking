@@ -22,7 +22,7 @@ The MVP excludes weekly summaries, copying logs or plans, recurring plans, advan
 
 ## Architecture
 
-Use a pnpm workspace monorepo:
+Use an npm workspaces monorepo:
 
 - `apps/web`: Next.js App Router, React, TypeScript, and Tailwind CSS.
 - `apps/api`: NestJS REST API and TypeScript.

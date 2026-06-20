@@ -4,9 +4,9 @@
 
 **Goal:** Build the approved diet-tracking MVP so a user can authenticate, manage foods and meals, plan one day, log actual intake, set targets, and see authoritative daily totals on desktop and mobile.
 
-**Architecture:** A pnpm workspace contains a Next.js App Router frontend, a NestJS REST API, and a deliberately small shared contracts package. NestJS and PostgreSQL are authoritative for ownership, timezone boundaries, decimal-safe macro calculations, snapshots, and dashboard aggregation; the frontend provides previews and refreshes server data after every mutation.
+**Architecture:** An npm workspaces monorepo contains a Next.js App Router frontend, a NestJS REST API, and a deliberately small shared contracts package. NestJS and PostgreSQL are authoritative for ownership, timezone boundaries, decimal-safe macro calculations, snapshots, and dashboard aggregation; the frontend provides previews and refreshes server data after every mutation.
 
-**Tech Stack:** pnpm 11, Node.js 22 LTS, Next.js 16, React 19, NestJS 11, PostgreSQL 17, Prisma 7, Tailwind CSS 4, TanStack Query 5, React Hook Form 7, Luxon, decimal.js, Vitest/Jest, Supertest, Testing Library, and Playwright.
+**Tech Stack:** npm 11 workspaces, Node.js 22 LTS, Next.js 16, React 19, NestJS 11, PostgreSQL 17, Prisma, Tailwind CSS 4, TanStack Query 5, React Hook Form 7, Luxon, decimal.js, Vitest/Jest, Supertest, Testing Library, and Playwright.
 
 ---
 

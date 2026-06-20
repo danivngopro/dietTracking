@@ -1,20 +1,21 @@
 {
   "name": "diet-tracking",
   "private": true,
-  "packageManager": "pnpm@11.8.0",
-  "engines": {
-    "node": ">=22 <23"
-  },
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22 <23" },
   "scripts": {
-    "dev": "pnpm --parallel --filter @diet/api --filter @diet/web dev",
-    "build": "pnpm -r build",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r --if-present test",
+    "dev": "concurrently -n api,web -c green,cyan \"npm run dev -w @diet/api\" \"npm run dev -w @diet/web\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "check:workspace": "node scripts/check-workspace.mjs",
-    "db:migrate": "pnpm --filter @diet/api prisma:migrate",
-    "db:seed": "pnpm --filter @diet/api prisma:seed",
-    "db:validate": "pnpm --filter @diet/api prisma:validate"
+    "db:migrate": "npm run prisma:migrate -w @diet/api",
+    "db:seed": "npm run prisma:seed -w @diet/api",
+    "db:validate": "npm run prisma:validate -w @diet/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
 
