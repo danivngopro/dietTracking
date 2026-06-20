@@ -14,7 +14,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
 function createTimeoutSignal(existingSignal?: AbortSignal | null) {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const timeout = globalThis.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
   const abortFromExistingSignal = () => controller.abort();
   if (existingSignal) {
@@ -25,7 +25,7 @@ function createTimeoutSignal(existingSignal?: AbortSignal | null) {
   return {
     signal: controller.signal,
     cleanup: () => {
-      window.clearTimeout(timeout);
+      globalThis.clearTimeout(timeout);
       existingSignal?.removeEventListener('abort', abortFromExistingSignal);
     },
   };
