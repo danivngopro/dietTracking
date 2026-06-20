@@ -4,7 +4,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
-import { apiFetch, jsonRequest } from '@/lib/api/client';
+import { ApiError, apiFetch, jsonRequest } from '@/lib/api/client';
+
+function formatAuthError(error: unknown) {
+  if (error instanceof ApiError) {
+    const suffix = error.status ? ` (${error.code}, HTTP ${error.status})` : ` (${error.code})`;
+    return `${error.message}${suffix}`;
+  }
+
+  if (error instanceof Error) return error.message;
+  return 'Authentication failed';
+}
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
   const [email, setEmail] = useState('');
@@ -18,14 +28,14 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     e.preventDefault();
     setBusy(true);
     setError('');
+
     try {
       await apiFetch(`/auth/${mode}`, jsonRequest('POST', { email, password }));
-      await queryClient.invalidateQueries({ queryKey: ['session'] });
+      void queryClient.invalidateQueries({ queryKey: ['session'] });
       router.replace('/dashboard');
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Authentication failed');
-    } finally {
+      setError(formatAuthError(e));
       setBusy(false);
     }
   };
@@ -60,9 +70,9 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
             />
           </label>
           {error && (
-            <p role="alert" className="text-sm text-red-700">
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
               {error}
-            </p>
+            </div>
           )}
           <button className="btn btn-primary" disabled={busy}>
             {busy ? 'Please wait…' : signup ? 'Create account' : 'Log in'}
